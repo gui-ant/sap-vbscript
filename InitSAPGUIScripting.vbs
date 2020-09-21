@@ -12,6 +12,6 @@ Function main()
   cls_sap.SetConnectionParams "epr.sig.defesa.pt", "00", "110"
   cls_sap.SetUserParams "D0402214", "GfA0a7"
   cls_sap.Attach
-  msgbox "Terminado"
+  
   main = 1 ' can't call this a success
 End Function ' main

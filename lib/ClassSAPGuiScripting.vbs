@@ -23,19 +23,19 @@ Class ClassSAPGUIScripting
     
     Set WSHShell = CreateObject("WScript.Shell")
     Set SapApp = SapGui.GetScriptingEngine
-    WSHShell.ConnectObject SapApp, "Engine_"
+    
     if Err.Number <> 0 then
       MsgBox "ScriptingEngine not found"
       Exit Sub
     End if
     
     Set SapGui = Nothing
-    Shell GetConfig("SAP_LOGON_PATH").Values(1), vbNormalFocus
+    'Shell "C:\Program Files (x86)\SAP\FrontEnd\SAPgui\saplogon.exe", vbNormalFocus
     
-    Do Until WSHShell.AppActivate("SAP Logon ")
-        Application.Wait Now + TimeValue("0:00:01")
-    Loop
-    Set WSHShell = Nothing
+    'Do Until WSHShell.AppActivate("SAP Logon ")
+    '    Application.Wait Now + TimeValue("0:00:01")
+    'Loop
+    'Set WSHShell = Nothing
     
     'Dim opt
     'Set SapApp = Nothing
@@ -78,8 +78,9 @@ Public Sub SetUserParams(user, password)
 End Sub
 
 Sub Attach()
-    Set SapConn = GetActiveConnection(SAP_SERVER, SAP_INSTANCE, SAP_SID, SAP_USER)
 
+    Set SapConn = GetActiveConnection(SAP_SERVER, SAP_INSTANCE, SAP_SID, SAP_USER)
+    
     ' Verifica se existe conexão ativa, ou seja, se exite sessão com login
     If SapConn Is Nothing Then
         Set SapConn = SapApp.OpenConnectionByConnectionString("/SAP_CODEPAGE=" & SAP_SID & "0 /FULLMENU " & SAP_SERVER & " " & SAP_INSTANCE & " /3 /UPDOWNLOAD_CP=2")
@@ -99,12 +100,11 @@ Sub Attach()
 End Sub
 
 Private Sub AppWait()
-    Waiting = 1
+    'Waiting = 1
         
-    Do While Waiting = 1
-        DoEvents
-        Application.Wait Now + TimeValue("0:00:01")
-    Loop
+    'Do While Waiting = 1
+    '    Application.Wait Now + TimeValue("0:00:01")
+    'Loop
 End Sub
 
 Private Sub AttachSessions()
@@ -131,24 +131,24 @@ Private Sub AttachSessions()
 End Sub
 
 Private Function GetActiveConnection(server, instance, SID, user) 
-
+  
     For Each conn In SapApp.Connections
-        If ConnectionHasParameters(server, instance, SID) Then
-            'For Each sess In SapConn.Sessions
-            '    If sess.Info.user = user Then
-             '       Set GetActiveConnection = conn
-             '       Exit Function
-             '   End If
-            'Next
+        If ConnectionHasParameters(server, instance, SID, conn) Then
+            For Each sess In conn.Sessions
+                If sess.Info.user = user Then
+                   Set GetActiveConnection = conn
+                   Exit Function
+               End If
+            Next
         End If
     Next
     Set GetActiveConnection = Nothing
 End Function
 
 
-Private Function ConnectionHasParameters(server, instance, SID)
-    HasSameServerAndInstance = InStr(1, SapConn.ConnectionString, server & " " & instance) > 0
-    HasSameSID = InStr(1, SapConn.ConnectionString, sap & "/SAP_CODEPAGE=" & SID) > 0
+Private Function ConnectionHasParameters(server, instance, SID, conn)
+    HasSameServerAndInstance = InStr(1, conn.ConnectionString, server & " " & instance) > 0
+    HasSameSID = InStr(1, conn.ConnectionString, sap & "/SAP_CODEPAGE=" & SID) > 0
     
     ConnectionHasParameters = HasSameServerAndInstance And HasSameSID
 End Function
