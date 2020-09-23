@@ -40,7 +40,7 @@ Class ClassSAPGUIScripting
         on error resume next 
         Set obj = GetObject("SAPGUI")
         if err.number <> 0 then
-            if StartApplication("") then
+            if StartApplication then
                 err.clear
             Else
                 set StartOrGetApplication = Nothing
@@ -73,7 +73,7 @@ Class ClassSAPGUIScripting
 
     Private Function StartApplication(path)
         
-        if path = "" then path = SAP_LOGON_PATH
+        If path = "" or isNull(path) then path = SAP_LOGON_PATH
         
         Dim WSHShell : Set WSHShell = CreateObject("WScript.Shell")
         WSHShell.Run path, 1, false
@@ -100,7 +100,7 @@ Class ClassSAPGUIScripting
         AttachAvailableSessions
     End Sub
     
-    Function IsUserLoggedIn
+    Private Function IsUserLoggedIn()
         If objConnection.Sessions(0).Info.User = SAP_USER then IsUserLoggedIn = true
     End Function
     
@@ -110,23 +110,6 @@ Class ClassSAPGUIScripting
             WScript.Sleep(100)
         Loop
     End Sub
-
-    'Private Sub AttachSessions()
-    '    For Each conn In objScriptingEngine.Connections
-    '        If InStr(1, conn.ConnectionString, server & " " & instance) > 0 And InStr(1, conn.ConnectionString, "/SAP_CODEPAGE=" & SID) > 0 Then
-    '            If conn.Sessions.Count > 0 Then
-    '                For Each sess In conn.Sessions
-    '                    If sess.Info.user = user And sess.Info.Transaction = "SESSION_MANAGER" And i < SESSION_LIMIT) Then
-    '                        Set controlledSessions(i) = S.GetSession
-    '                        i = i + 1
-    '                    ElseIf sess.Info.user = "" Then
-    '                        conn.CloseConnection
-    '                    End If
-    '                Next
-    '            End If
-    '        End If
-    '    Next
-    'End Sub
     
     Private Function GetActiveConnection() 
         For Each conn In objScriptingEngine.Connections
@@ -153,11 +136,22 @@ Class ClassSAPGUIScripting
         End If
     End Sub
 
-    Public Sub CreateNewSession()
+    Public Function CreateNewSession()
+        For Each sess In objConnection.Sessions
+            If sess.Info.Transaction = DEFAULT_TRANSACTION_NAME Then
+                set CreateNewSession = sess
+                Exit Function
+            End If
+        Next
         objConnection.Sessions(0).CreateSession
         AppWait
-    End Sub
+        set CreateNewSession = lstSessions(lstSessions.count - 1)
+    End Function
     
+    Public Function GetAvailableSession()
+        Set GetAvailableSession = lstSessions(0)
+    End Function
+
     Private Function ConnectionHasParameters(conn, server, instance, SID)
         HasSameServerAndInstance = InStr(1, conn.ConnectionString, server & " " & instance) > 0
         HasSameSID = InStr(1, conn.ConnectionString, sap & "/SAP_CODEPAGE=" & SID) > 0
@@ -217,7 +211,6 @@ Class ClassSAPGUIScripting
     End Property
 
     Public Property Get GetSession(index)
-        WScript.echo index & ": " & lstSessions(index).Info.Transaction
         Set GetSession = lstSessions(index)
     End Property
 

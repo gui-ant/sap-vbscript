@@ -10,13 +10,11 @@ Function Main()
   sap.SetUserParams "D0402214", "GfA0a7"
   sap.Attach
 
-  set ses0 = sap.GetSession(0)
+  set ses0 = sap.GetAvailableSession
   ses0.StartTransaction "fb01"
 
-  sap.CreateNewSession
-  
-  set ses1 = sap.GetSession(1)
-  'ses1.StartTransaction "fbl3n"
+  set ses1 = sap.CreateNewSession
+  ses1.StartTransaction "fbl3n"
 
   Main = 1
 End Function
