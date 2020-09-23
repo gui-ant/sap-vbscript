@@ -2,7 +2,7 @@ Const SAP_LOGON_PATH = """C:\Program Files (x86)\SAP\FrontEnd\SAPgui\saplogon.ex
 Const SESSION_LIMIT = 6
 Const DEFAULT_TRANSACTION_NAME = "SESSION_MANAGER"
 
-Class ClassSAPGUIScripting
+Class ClassSapGuiScripting
     
     Private objSapGui
     Private objScriptingEngine
@@ -148,10 +148,6 @@ Class ClassSAPGUIScripting
         set CreateNewSession = lstSessions(lstSessions.count - 1)
     End Function
     
-    Public Function GetAvailableSession()
-        Set GetAvailableSession = lstSessions(0)
-    End Function
-
     Private Function ConnectionHasParameters(conn, server, instance, SID)
         HasSameServerAndInstance = InStr(1, conn.ConnectionString, server & " " & instance) > 0
         HasSameSID = InStr(1, conn.ConnectionString, sap & "/SAP_CODEPAGE=" & SID) > 0
@@ -171,6 +167,10 @@ Class ClassSAPGUIScripting
         lstSessions.add session
     End Sub
 
+    Public Function GetAvailableSession()
+        Set GetAvailableSession = lstSessions(0)
+    End Function
+    
     Public Sub SetConnectionParams(server, instance, SID)
         SetServer = server
         SetInstance = instance
@@ -217,6 +217,13 @@ Class ClassSAPGUIScripting
     Private Sub Class_Terminate()
         set objSapGui = Nothing
         set objScriptingEngine = Nothing
+        set objConnection = Nothing
         Waiting = 0
+    End Sub
+
+    Sub Engine_CreateSession(ByRef Session)
+        WScript.Echo "Session created"
+        SapGuiScripting.AttachSession Session
+        SapGuiScripting.Waiting = 0
     End Sub
 End Class
