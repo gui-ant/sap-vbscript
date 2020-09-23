@@ -17,37 +17,38 @@ Class ClassSAPGUIScripting
     Private SAP_USER
     Private SAP_PASS
 
-    Private Waiting
+    Public Waiting
 
     Private Sub Class_Initialize()
-
+        
         Set lstSessions = CreateObject("System.Collections.ArrayList")
         Waiting = 0
 
         on error resume next
-        
         set objSapGui = StartOrGetApplication
         if objSapGui is Nothing then Exit Sub
-        
+
         set objScriptingEngine = GetScriptingEngine
         if objScriptingEngine is Nothing then Exit Sub
         
+        WScript.ConnectObject objScriptingEngine, "Engine_"
+
         on error goto 0
     End Sub
 
     Private Function StartOrGetApplication()
+        on error resume next 
         Set obj = GetObject("SAPGUI")
         if err.number <> 0 then
-            if StartApplication then
-                set StartOrGetApplication = GetObject("SAPGUI")
+            if StartApplication("") then
                 err.clear
-                Exit Function
             Else
+                set StartOrGetApplication = Nothing
                 WScript.echo "The application could not be started."
                 Exit Function
             End If
         end if
-        set StartOrGetApplication = Nothing
+        set StartOrGetApplication = GetObject("SAPGUI")
     End Function
 
     Private Function GetScriptingEngine()
@@ -62,7 +63,8 @@ Class ClassSAPGUIScripting
     End Function
 
     Private Function StartOrGetConnection()
-        Set conn = GetActiveConnection 
+        
+        Set conn = GetActiveConnection
         if conn is Nothing then 
             Set conn = objScriptingEngine.OpenConnectionByConnectionString("/SAP_CODEPAGE=" & SAP_SID & "0 /FULLMENU " & SAP_SERVER & " " & SAP_INSTANCE & " /3 /UPDOWNLOAD_CP=2")
         End If
@@ -70,8 +72,9 @@ Class ClassSAPGUIScripting
     End Function
 
     Private Function StartApplication(path)
+        
         if path = "" then path = SAP_LOGON_PATH
-
+        
         Dim WSHShell : Set WSHShell = CreateObject("WScript.Shell")
         WSHShell.Run path, 1, false
         WScript.echo "Initiating a new SAPGUI instance..."
@@ -96,7 +99,11 @@ Class ClassSAPGUIScripting
         If Not IsUserLoggedIn then Login
         AttachAvailableSessions
     End Sub
-
+    
+    Function IsUserLoggedIn
+        If objConnection.Sessions(0).Info.User = SAP_USER then IsUserLoggedIn = true
+    End Function
+    
     Private Sub AppWait()
         Waiting = 1
         Do While (Waiting = 1)
@@ -134,11 +141,23 @@ Class ClassSAPGUIScripting
     Private Sub AttachAvailableSessions() 
         For Each sess In objConnection.Sessions
             If sess.Info.Transaction = DEFAULT_TRANSACTION_NAME Then
-               lstSessions.add sess
+               AttachSession sess
             End If
         Next
+
+        ' If theres no available sessions, creates a new one
+        if lstSessions.count = 0 then
+            If objConnection.Sessions.Count < SESSION_LIMIT then
+                CreateNewSession        
+            End If
+        End If
     End Sub
 
+    Public Sub CreateNewSession()
+        objConnection.Sessions(0).CreateSession
+        AppWait
+    End Sub
+    
     Private Function ConnectionHasParameters(conn, server, instance, SID)
         HasSameServerAndInstance = InStr(1, conn.ConnectionString, server & " " & instance) > 0
         HasSameSID = InStr(1, conn.ConnectionString, sap & "/SAP_CODEPAGE=" & SID) > 0
@@ -146,10 +165,12 @@ Class ClassSAPGUIScripting
         ConnectionHasParameters = (HasSameServerAndInstance And HasSameSID)
     End Function
 
-    Public Function Login(user, pass)
-        objConnection.Sessions(0).FindById("wnd[0]/usr/txtRSYST-BNAME").Text = SAP_USER
+    Public Function Login
+        Set sess = objConnection.Sessions(0)
+        sess.FindById("wnd[0]/usr/txtRSYST-BNAME").Text = SAP_USER
         objConnection.Sessions(0).FindById("wnd[0]/usr/pwdRSYST-BCODE").Text = SAP_PASS
         objConnection.Sessions(0).FindById("wnd[0]").SendVKey 0
+        AttachSession objConnection.Sessions(0)
     End Function
     
     Public Sub AttachSession(session)
@@ -188,7 +209,7 @@ Class ClassSAPGUIScripting
     End Property
 
     Public Property Get ScriptingEngine()
-        ScriptingEngine = objScriptingEngine
+        Set ScriptingEngine = objScriptingEngine
     End Property
 
     Private Property Let SetPassword(pass)
@@ -196,6 +217,7 @@ Class ClassSAPGUIScripting
     End Property
 
     Public Property Get GetSession(index)
+        WScript.echo index & ": " & lstSessions(index).Info.Transaction
         Set GetSession = lstSessions(index)
     End Property
 

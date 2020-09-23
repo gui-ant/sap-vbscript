@@ -1,26 +1,15 @@
 ' Globals
-Dim LIB_DIR       : LIB_DIR = ".\lib"
-Dim FILE_SYS_OBJ  : Set FILE_SYS_OBJ = CreateObject("Scripting.FileSystemObject")
-Dim cls_sap
+Dim strLibDir   : strLibDir = ".\lib"
+Dim objFileSys  : Set objFileSys = CreateObject("Scripting.FileSystemObject")
+ExecuteGlobal objFileSys.OpenTextFile(objFileSys.BuildPath(strLibDir, "ClassSAPGUIScripting.vbs")).ReadAll()
 
-Include "ClassSAPGUIScripting.vbs"
+Dim SAPGUIScripting
+set SAPGUIScripting = New ClassSAPGUIScripting
 
-WScript.Quit SAPGUIScripting()
-
-Function Include(file)
-  Dim filePath : filePath = FILE_SYS_OBJ.BuildPath(LIB_DIR, file)
-  ExecuteGlobal FILE_SYS_OBJ.OpenTextFile(filePath).ReadAll()
-End Function ' Include
-
-Sub Engine_CreateSession(ByVal Session)
-  cls_sap.AttachSession Session
+Sub Engine_CreateSession(ByRef Session)
   WScript.Echo "Session created"
+  SAPGUIScripting.AttachSession Session
+  SAPGUIScripting.Waiting = 0
 End Sub
 
-Function SAPGUIScripting()
-  Set cls_sap = New ClassSAPGUIScripting
-  WScript.ConnectObject cls_sap.ScriptingEngine,  "Engine_"
-  
-  set SAPGUIScripting = cls_sap
-End Function ' SAPGUIScripting
 
