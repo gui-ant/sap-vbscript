@@ -6,15 +6,15 @@ WScript.Quit Main()
 Function Main()
   set sap = SAPGUIScripting
 
-  sap.SetConnectionParams "epr.sig.defesa.pt", "00", "110"
-  sap.SetUserParams "D0402214", "GfA0a7"
+  ' These parameters can be found on the connection properties window, from the SAP Logon screen
+  sap.SetConnectionParams "<AppServer>", "<InstanceNr>", "<SystemID>"
+  sap.SetUserParams "<Username>", "<Password>"
   sap.Attach
 
   set ses0 = sap.GetAvailableSession
-  ses0.StartTransaction "fb01"
+  ses0.StartTransaction "<transactionCode>"
 
   set ses1 = sap.CreateNewSession
-  ses1.StartTransaction "fbl3n"
+  ses1.StartTransaction "<transactionCode>"
 
-  Main = 1
 End Function
