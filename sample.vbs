@@ -1,3 +1,4 @@
+Dim strLibDir   : strLibDir = ".\lib"
 Dim objFileSys  : Set objFileSys = CreateObject("Scripting.FileSystemObject")
 ExecuteGlobal objFileSys.OpenTextFile(objFileSys.BuildPath(strLibDir, "InitSAPGUIScripting.vbs")).ReadAll()
 
