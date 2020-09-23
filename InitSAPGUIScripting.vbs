@@ -6,10 +6,6 @@ ExecuteGlobal objFileSys.OpenTextFile(objFileSys.BuildPath(strLibDir, "ClassSapG
 Dim SapGuiScripting
 Set SapGuiScripting = New ClassSapGuiScripting
 
-Sub Engine_CreateSession(ByRef Session)
-  WScript.Echo "Session created"
-  SapGuiScripting.AttachSession Session
-  SapGuiScripting.Waiting = 0
-End Sub
+
 
 
