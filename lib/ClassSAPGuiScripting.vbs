@@ -1,8 +1,8 @@
-Const SAP_LOGON_PATH = """C:\Program Files (x86)\SAP\FrontEnd\SAPgui\saplogon.exe"""
-Const SESSION_LIMIT = 6
-Const DEFAULT_TRANSACTION_NAME = "SESSION_MANAGER"
 
 Class ClassSapGuiScripting
+    Public SAP_LOGON_PATH
+    Public SESSION_LIMIT
+    Public DEFAULT_TRANSACTION_NAME
     
     Private objSapGui
     Private objScriptingEngine
@@ -17,10 +17,16 @@ Class ClassSapGuiScripting
     Private SAP_USER
     Private SAP_PASS
 
+    Private DECIMAL_SEPARATOR
+    Private THOUSANDS_SEPARATOR
+
     Public Waiting
 
     Private Sub Class_Initialize()
-        
+        SAP_LOGON_PATH = """C:\Program Files (x86)\SAP\FrontEnd\SAPgui\saplogon.exe"""
+        SESSION_LIMIT = 6
+        DEFAULT_TRANSACTION_NAME = "SESSION_MANAGER"
+
         Set lstSessions = CreateObject("System.Collections.ArrayList")
         Waiting = 0
 
@@ -156,11 +162,17 @@ Class ClassSapGuiScripting
     End Function
 
     Public Function Login
-        Set sess = objConnection.Sessions(0)
-        sess.FindById("wnd[0]/usr/txtRSYST-BNAME").Text = SAP_USER
-        objConnection.Sessions(0).FindById("wnd[0]/usr/pwdRSYST-BCODE").Text = SAP_PASS
-        objConnection.Sessions(0).FindById("wnd[0]").SendVKey 0
-        AttachSession objConnection.Sessions(0)
+        Set sess = new ClassSAPSession
+        sess.Attach objConnection.Sessions(0)
+        AttachSession sess
+        sess.GetElement("txtRSYST-BNAME").Text = SAP_USER
+        sess..GetElement("pwdRSYST-BCODE").Text = SAP_PASS
+        sess.Window(0).SendVKey 0
+        sess.StartTransaction "ZSU3"
+        sess.SelectElement("tabsTABSTRIP1/tabpDEFA")
+        DECIMAL_SEPARATOR   = Mid(sess.GetElement("tabsTABSTRIP1/tabpDEFA/ssubMAINAREA:SAPLSUID_MAINTENANCE:1105/cmbSUID_ST_NODE_DEFAULTS-DCPFM").text, 10, 1)
+        THOUSANDS_SEPARATOR = Mid(sess.GetElement("tabsTABSTRIP1/tabpDEFA/ssubMAINAREA:SAPLSUID_MAINTENANCE:1105/cmbSUID_ST_NODE_DEFAULTS-DATFM").text, 6, 1)
+        sess.GoToMenu
     End Function
     
     Public Sub AttachSession(session)
