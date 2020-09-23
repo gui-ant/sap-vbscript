@@ -1,16 +1,19 @@
-Class ClassSAPGUIScripting
-    Private Const SAP_LOGON_PATH = """C:\Program Files (x86)\SAP\FrontEnd\SAPgui\saplogon.exe"""
-    Private Const SESSION_LIMIT = 6
-    Private Const DEFAULT_TRANSACTION_NAME = "SESSION_MANAGER"
+Const SAP_LOGON_PATH = """C:\Program Files (x86)\SAP\FrontEnd\SAPgui\saplogon.exe"""
+Const SESSION_LIMIT = 6
+Const DEFAULT_TRANSACTION_NAME = "SESSION_MANAGER"
 
+Class ClassSAPGUIScripting
+    
     Private objSapGui
     Private objScriptingEngine
-    Private SapConn
-    Private SapSessions
+    Private objConnection
+
+    Private lstSessions
 
     Private SAP_SERVER
     Private SAP_INSTANCE
     Private SAP_SID
+
     Private SAP_USER
     Private SAP_PASS
 
@@ -18,7 +21,7 @@ Class ClassSAPGUIScripting
 
     Private Sub Class_Initialize()
 
-        Set SapSessions = CreateObject("System.Collections.ArrayList")
+        Set lstSessions = CreateObject("System.Collections.ArrayList")
         Waiting = 0
 
         on error resume next
@@ -49,7 +52,6 @@ Class ClassSAPGUIScripting
 
     Private Function GetScriptingEngine()
         Set obj = objSapGui.GetScriptingEngine
-        WScript.ConnectObject obj,  "Engine_"
 
         if err.number <> 0 then
             WScript.echo "SAP Scripting Engine not found or it is disabled"
@@ -90,24 +92,10 @@ Class ClassSAPGUIScripting
     End Function
 
     Sub Attach()
-
-        Set SapConn = StartOrGetConnection
-                
+        Set objConnection = StartOrGetConnection
+        If Not IsUserLoggedIn then Login
         AttachAvailableSessions
-        
-        If SapConn Is Nothing Then
-            
-            ' TODO: Wait until the login screen appears
-            'AppWait
-            
-            ' Attaches the first session
-            
-        Else
-            AttachSessions
-        End If
-            
     End Sub
-
 
     Private Sub AppWait()
         Waiting = 1
@@ -116,27 +104,27 @@ Class ClassSAPGUIScripting
         Loop
     End Sub
 
-    Private Sub AttachSessions()
-        For Each conn In objScriptingEngine.Connections
-            If InStr(1, conn.ConnectionString, server & " " & instance) > 0 And InStr(1, conn.ConnectionString, "/SAP_CODEPAGE=" & SID) > 0 Then
-                If conn.Sessions.Count > 0 Then
-                    For Each sess In conn.Sessions
-                        If sess.Info.user = user And sess.Info.Transaction = "SESSION_MANAGER" And i < SESSION_LIMIT) Then
-                            Set controlledSessions(i) = S.GetSession
-                            i = i + 1
-                        ElseIf sess.Info.user = "" Then
-                            conn.CloseConnection
-                        End If
-                    Next
-                End If
-            End If
-        Next
-    End Sub
+    'Private Sub AttachSessions()
+    '    For Each conn In objScriptingEngine.Connections
+    '        If InStr(1, conn.ConnectionString, server & " " & instance) > 0 And InStr(1, conn.ConnectionString, "/SAP_CODEPAGE=" & SID) > 0 Then
+    '            If conn.Sessions.Count > 0 Then
+    '                For Each sess In conn.Sessions
+    '                    If sess.Info.user = user And sess.Info.Transaction = "SESSION_MANAGER" And i < SESSION_LIMIT) Then
+    '                        Set controlledSessions(i) = S.GetSession
+    '                        i = i + 1
+    '                    ElseIf sess.Info.user = "" Then
+    '                        conn.CloseConnection
+    '                    End If
+    '                Next
+    '            End If
+    '        End If
+    '    Next
+    'End Sub
     
     Private Function GetActiveConnection() 
         For Each conn In objScriptingEngine.Connections
             If ConnectionHasParameters(conn, SAP_SERVER, SAP_INSTANCE, SAP_SID) Then
-                set GetActiveConnection conn
+                Set GetActiveConnection = conn
                 Exit Function
             End If
         Next
@@ -144,11 +132,9 @@ Class ClassSAPGUIScripting
     End Function
 
     Private Sub AttachAvailableSessions() 
-        If Not IsUserLoggedIn then Login
-
-        For Each sess In SapConn.Sessions
+        For Each sess In objConnection.Sessions
             If sess.Info.Transaction = DEFAULT_TRANSACTION_NAME Then
-               SapSessions.add sess
+               lstSessions.add sess
             End If
         Next
     End Sub
@@ -161,10 +147,14 @@ Class ClassSAPGUIScripting
     End Function
 
     Public Function Login(user, pass)
-        SapConn.Sessions(0).FindById("wnd[0]/usr/txtRSYST-BNAME").Text = SAP_USER
-        SapConn.Sessions(0).FindById("wnd[0]/usr/pwdRSYST-BCODE").Text = SAP_PASS
-        SapConn.Sessions(0).FindById("wnd[0]").SendVKey 0
+        objConnection.Sessions(0).FindById("wnd[0]/usr/txtRSYST-BNAME").Text = SAP_USER
+        objConnection.Sessions(0).FindById("wnd[0]/usr/pwdRSYST-BCODE").Text = SAP_PASS
+        objConnection.Sessions(0).FindById("wnd[0]").SendVKey 0
     End Function
+    
+    Public Sub AttachSession(session)
+        lstSessions.add session
+    End Sub
 
     Public Sub SetConnectionParams(server, instance, SID)
         SetServer = server
@@ -193,16 +183,20 @@ Class ClassSAPGUIScripting
         SAP_USER = user
     End Property
 
-    Public Property Get GetUser()
-        GetUser = SAP_USER
+    Public Property Get User()
+        User = SAP_USER
+    End Property
+
+    Public Property Get ScriptingEngine()
+        ScriptingEngine = objScriptingEngine
     End Property
 
     Private Property Let SetPassword(pass)
         SAP_PASS = pass
     End Property
 
-    Public Property Get GetSession()
-        Set GetSession = SapSession
+    Public Property Get GetSession(index)
+        Set GetSession = lstSessions(index)
     End Property
 
     Private Sub Class_Terminate()
