@@ -2,7 +2,6 @@
 Class ClassSapGuiScripting
     Public SAP_LOGON_PATH
     Public SESSION_LIMIT
-    Public DEFAULT_TRANSACTION_NAME
     
     Private objSapGui
     Private objScriptingEngine
@@ -29,11 +28,11 @@ Class ClassSapGuiScripting
 
         Set lstSessions = CreateObject("System.Collections.ArrayList")
         Waiting = 0
-
+        
         on error resume next
         set objSapGui = StartOrGetApplication
         if objSapGui is Nothing then Exit Sub
-
+        
         set objScriptingEngine = GetScriptingEngine
         if objScriptingEngine is Nothing then Exit Sub
         
@@ -46,7 +45,7 @@ Class ClassSapGuiScripting
         on error resume next 
         Set obj = GetObject("SAPGUI")
         if err.number <> 0 then
-            if StartApplication then
+            if StartApplication(SAP_LOGON_PATH) then
                 err.clear
             Else
                 set StartOrGetApplication = Nothing
@@ -102,7 +101,17 @@ Class ClassSapGuiScripting
 
     Sub Attach()
         Set objConnection = StartOrGetConnection
-        If Not IsUserLoggedIn then Login
+        If Not IsUserLoggedIn then
+            Set sess = new ClassSapSession
+            sess.Handle objConnection.Sessions(0)
+            sess.Login SAP_USER, SAP_PASS
+            WScript.Echo "Getting session data..."
+            sess.StartTransaction "ZSU3"
+            sess.SelectElement "tabsTABSTRIP1/tabpDEFA", 0
+            DECIMAL_SEPARATOR   = Mid(sess.GetElement("tabsTABSTRIP1/tabpDEFA/ssubMAINAREA:SAPLSUID_MAINTENANCE:1105/cmbSUID_ST_NODE_DEFAULTS-DCPFM",0).text, 10, 1)
+            THOUSANDS_SEPARATOR = Mid(sess.GetElement("tabsTABSTRIP1/tabpDEFA/ssubMAINAREA:SAPLSUID_MAINTENANCE:1105/cmbSUID_ST_NODE_DEFAULTS-DATFM",0).text, 6, 1)
+            sess.GoToMenu
+        End If
         AttachAvailableSessions
     End Sub
     
@@ -130,7 +139,7 @@ Class ClassSapGuiScripting
     Private Sub AttachAvailableSessions() 
         For Each sess In objConnection.Sessions
             If sess.Info.Transaction = DEFAULT_TRANSACTION_NAME Then
-               AttachSession sess
+                AttachSession sess
             End If
         Next
 
@@ -160,23 +169,11 @@ Class ClassSapGuiScripting
         
         ConnectionHasParameters = (HasSameServerAndInstance And HasSameSID)
     End Function
-
-    Public Function Login
-        Set sess = new ClassSAPSession
-        sess.Attach objConnection.Sessions(0)
-        AttachSession sess
-        sess.GetElement("txtRSYST-BNAME").Text = SAP_USER
-        sess..GetElement("pwdRSYST-BCODE").Text = SAP_PASS
-        sess.Window(0).SendVKey 0
-        sess.StartTransaction "ZSU3"
-        sess.SelectElement("tabsTABSTRIP1/tabpDEFA")
-        DECIMAL_SEPARATOR   = Mid(sess.GetElement("tabsTABSTRIP1/tabpDEFA/ssubMAINAREA:SAPLSUID_MAINTENANCE:1105/cmbSUID_ST_NODE_DEFAULTS-DCPFM").text, 10, 1)
-        THOUSANDS_SEPARATOR = Mid(sess.GetElement("tabsTABSTRIP1/tabpDEFA/ssubMAINAREA:SAPLSUID_MAINTENANCE:1105/cmbSUID_ST_NODE_DEFAULTS-DATFM").text, 6, 1)
-        sess.GoToMenu
-    End Function
     
     Public Sub AttachSession(session)
-        lstSessions.add session
+        Set s = new ClassSapSession
+        s.Handle session
+        lstSessions.add s
     End Sub
 
     Public Function GetAvailableSession()
@@ -235,7 +232,7 @@ Class ClassSapGuiScripting
 
     Sub Engine_CreateSession(ByRef Session)
         WScript.Echo "Session created"
-        SapGuiScripting.AttachSession Session
+        SapGuiScripting.AttachSession session
         SapGuiScripting.Waiting = 0
     End Sub
 End Class
