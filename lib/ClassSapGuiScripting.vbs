@@ -230,6 +230,26 @@ Class ClassSapGuiScripting
         Waiting = 0
     End Sub
 
+    Function NumberFormat(ByVal exp)
+        If InStr(1, exp, "-") Then
+            exp = Replace(exp, "-", "")
+            neg = "-"
+        End If
+
+        RemoveThousandsSeparator exp
+
+        sysDecSeparator = Mid(FormatNumber(0.1,1,true,false,-2), 2, 1)
+        exp = Replace(exp, sysDecSeparator, DECIMAL_SEPARATOR)
+        
+        NumberFormat = exp
+    End Function
+
+    Private Sub RemoveThousandsSeparator(ByRef exp)
+        decpart = Right(exp, 3)
+        exp = Left(exp, Len(exp) - 3)
+        exp = Replace(exp, T, "") & decpart
+    End Sub
+
     Sub Engine_CreateSession(ByRef Session)
         WScript.Echo "Session created"
         SapGuiScripting.AttachSession session

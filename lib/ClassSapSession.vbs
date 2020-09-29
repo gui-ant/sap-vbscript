@@ -50,41 +50,46 @@ Class ClassSapSession
     End Function
 
     Public Sub GoToMenu()
-        StartTransaction DEFAULT_TRANSACTION_NAME
+        StartTransaction "!"
     End Sub
 
     Public Sub SelectElement(id, wnd)
         GetElement(id, wnd).select
     End Sub
     
-    Public Sub PressEnter(times, wnd)
-        if isNull(times) then times = 1
-        t = 0
-        Do While t < times
-            GetWindow(wnd).SendVKey 0
-            IgnoreWarnings(wnd)
-            t = t + 1
-        Loop
+    Public Sub PressEnter(wnd)
+        GetWindow(wnd).SendVKey 0
+        IgnoreWarnings
     End Sub
 
-    Sub IgnoreWarnings(wnd)
-        Do While GetSbarMsgType(wnd) = "W"
-            PressEnter 1, wnd
+    Sub IgnoreWarnings()
+        Do While GetSbarMsgType(0) = "W"
+            PressEnter 0
         Loop
     End Sub
    
     Sub SetValue(ByVal field, wnd, value)
-        If value < 0 Then value = Abs(value)
+        if Not IsDate(value) and IsNumeric(value) then
+            If value < 0 Then value = Abs(value)
+        End If
         GetElement(field ,wnd).text = value
     End Sub
     
     Private Property Get GetToolbar(wnd, tbar)
-        Set GetToolbar = GetWindow(wnd).FindById("/tbar[" & tbar & "]/")
+        Set GetToolbar = GetWindow(wnd).FindById("tbar[" & tbar & "]")
     End Property
 
     Sub PressToolbarBtn(buttonID, wnd, tbar)
         WScript.echo "Button pressed: " & GetToolbar(wnd, tbar).FindById(buttonID).Id
         GetToolbar(wnd, tbar).FindById(buttonID).press
+    End Sub
+
+    Sub PressButton(buttonID, wnd)
+        GetElement(buttonID, wnd).Press
+    End Sub
+    
+    Sub SelectMenu(wnd, menu0, menu1)
+        GetWindow(wnd).FindById("mbar/menu[" & menu0 & "]/menu[" & menu1 & "]").Select
     End Sub
 
     Sub Handle(ByRef session)
@@ -95,4 +100,5 @@ Class ClassSapSession
         set objSession = Nothing
     End Sub
 
+    
 End Class
