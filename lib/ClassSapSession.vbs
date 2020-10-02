@@ -36,6 +36,10 @@ Class ClassSapSession
         Set GetStatusBar = GetWindow(wnd).FindById("sbar")
     End Property
     
+    Public Property Get GetSbarMsg(wnd)
+        GetSbarMsg = GetStatusBar(wnd).text
+    End Property
+
     Public Property Get GetSbarMsgType(wnd)
         GetSbarMsgType = GetStatusBar(wnd).MessageType
     End Property
@@ -50,7 +54,7 @@ Class ClassSapSession
     End Function
 
     Public Sub GoToMenu()
-        StartTransaction "!"
+        StartTransaction ""
     End Sub
 
     Public Sub SelectElement(id, wnd)
@@ -58,7 +62,9 @@ Class ClassSapSession
     End Sub
     
     Public Sub PressEnter(wnd)
+        on error resume next
         GetWindow(wnd).SendVKey 0
+        on error goto 0
         IgnoreWarnings
     End Sub
 
@@ -67,7 +73,17 @@ Class ClassSapSession
             PressEnter 0
         Loop
     End Sub
-   
+    
+    Function Save(ignoreWarnings)
+        GetToolbar(0).Children(2).press
+        If ignoreWarnings then IgnoreWarnings
+        If Error <> "" then Save = true
+    End Function
+
+    Function Error()
+        If GetSbarMsgType = "E" Then Error = GetSbarMsg(0) else Error = ""
+    End Function
+
     Sub SetValue(ByVal field, wnd, value)
         if Not IsDate(value) and IsNumeric(value) then
             If value < 0 Then value = Abs(value)
