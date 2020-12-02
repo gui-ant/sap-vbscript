@@ -1,4 +1,3 @@
-
 Class ClassSapGuiScripting
     Public SAP_LOGON_PATH
     Public SESSION_LIMIT
@@ -231,6 +230,7 @@ Class ClassSapGuiScripting
     End Sub
 
     Function NumberFormat(ByVal exp)
+
         If InStr(1, exp, "-") Then
             exp = Replace(exp, "-", "")
             neg = "-"
@@ -240,7 +240,7 @@ Class ClassSapGuiScripting
 
         sysDecSeparator = Mid(FormatNumber(0.1,1,true,false,-2), 2, 1)
         exp = Replace(exp, sysDecSeparator, DECIMAL_SEPARATOR)
-        
+
         NumberFormat = exp
     End Function
 

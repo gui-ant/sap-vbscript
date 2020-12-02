@@ -74,14 +74,14 @@ Class ClassSapSession
         Loop
     End Sub
     
-    Function Save(ignoreWarnings)
-        GetToolbar(0).Children(2).press
-        If ignoreWarnings then IgnoreWarnings
-        If Error <> "" then Save = true
+    Function Save(ignoreWarningsOnSave)
+        GetToolbar(0, 0).Children(2).press
+        If ignoreWarningsOnSave then IgnoreWarnings
+        If Error = "" then Save = true
     End Function
 
     Function Error()
-        If GetSbarMsgType = "E" Then Error = GetSbarMsg(0) else Error = ""
+        If GetSbarMsgType(0) = "E" Then Error = GetSbarMsg(0) else Error = ""
     End Function
 
     Sub SetValue(ByVal field, wnd, value)
