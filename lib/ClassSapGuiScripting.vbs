@@ -67,7 +67,6 @@ Class ClassSapGuiScripting
     End Function
 
     Private Function StartOrGetConnection()
-        
         Set conn = GetActiveConnection
         if conn is Nothing then 
             Set conn = objScriptingEngine.OpenConnectionByConnectionString("/SAP_CODEPAGE=" & SAP_SID & "0 /FULLMENU " & SAP_SERVER & " " & SAP_INSTANCE & " /3 /UPDOWNLOAD_CP=2")
@@ -163,9 +162,8 @@ Class ClassSapGuiScripting
     End Function
     
     Private Function ConnectionHasParameters(conn, server, instance, SID)
-        HasSameServerAndInstance = InStr(1, conn.ConnectionString, server & " " & instance) > 0
-        HasSameSID = InStr(1, conn.ConnectionString, sap & "/SAP_CODEPAGE=" & SID) > 0
-        
+        HasSameServerAndInstance = (InStr(1, conn.ConnectionString, server & " " & instance) > 0)
+        HasSameSID = (InStr(1, conn.ConnectionString, "/SAP_CODEPAGE=" & SID) > 0)
         ConnectionHasParameters = (HasSameServerAndInstance And HasSameSID)
     End Function
     
@@ -230,7 +228,7 @@ Class ClassSapGuiScripting
     End Sub
 
     Function NumberFormat(ByVal exp)
-
+        exp = FormatNumber(CDbl(exp),-1,-2,-2,0)
         If InStr(1, exp, "-") Then
             exp = Replace(exp, "-", "")
             neg = "-"
@@ -247,7 +245,7 @@ Class ClassSapGuiScripting
     Private Sub RemoveThousandsSeparator(ByRef exp)
         decpart = Right(exp, 3)
         exp = Left(exp, Len(exp) - 3)
-        exp = Replace(exp, T, "") & decpart
+        exp = Replace(exp, THOUSANDS_SEPARATOR, "") & decpart
     End Sub
 
     Sub Engine_CreateSession(ByRef Session)
