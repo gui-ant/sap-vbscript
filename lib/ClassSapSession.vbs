@@ -108,6 +108,22 @@ Class ClassSapSession
         GetWindow(wnd).FindById("mbar/menu[" & menu0 & "]/menu[" & menu1 & "]").Select
     End Sub
 
+    Sub selectRadioBtn(buttonID, wnd )
+        GetElement(buttonID, wnd).Select
+    End Function
+
+    Sub toggleCheckbox(checkboxID, wnd)
+        If GetUserArea(wnd).FindById("chk" & checkboxID) Then
+            GetUserArea(wnd).FindById("chk" & checkboxID).Selected = False
+        Else
+            GetUserArea(wnd).FindById("chk" & checkboxID).Selected = True
+        End If
+    End Sub
+
+    Sub execute()
+        GetToolbar(0, 1).press
+    End Sub
+
     Sub Handle(ByRef session)
         Set objSession = session
     End Sub

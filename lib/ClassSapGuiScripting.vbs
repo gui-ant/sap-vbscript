@@ -247,7 +247,11 @@ Class ClassSapGuiScripting
         exp = Left(exp, Len(exp) - 3)
         exp = Replace(exp, THOUSANDS_SEPARATOR, "") & decpart
     End Sub
-
+    
+    Public Function NormalizeDate(ByVal date)
+        NormalizeDate = Right("0" & Day(date),2) & Right("0" & Month(date),2) & year(date)
+    End Function
+    
     Sub Engine_CreateSession(ByRef Session)
         WScript.Echo "Session created"
         SapGuiScripting.AttachSession session
