@@ -23,6 +23,10 @@ Class ClassSapSession
         GetTransaction = objSession.Info.Transaction
     End Property
     
+    Public Property Get Id()
+        Id = objSession.Id
+    End Property
+
     Public Property Get GetWindow(index)
         set GetWindow = objSession.FindById("wnd[" & index &"]")
     End Property
@@ -96,7 +100,6 @@ Class ClassSapSession
     End Property
 
     Sub PressToolbarBtn(buttonID, wnd, tbar)
-        WScript.echo "Button pressed: " & GetToolbar(wnd, tbar).FindById(buttonID).Id
         GetToolbar(wnd, tbar).FindById(buttonID).press
     End Sub
 
@@ -108,11 +111,11 @@ Class ClassSapSession
         GetWindow(wnd).FindById("mbar/menu[" & menu0 & "]/menu[" & menu1 & "]").Select
     End Sub
 
-    Sub selectRadioBtn(buttonID, wnd )
+    Sub SelectRadioBtn(buttonID, wnd)
         GetElement(buttonID, wnd).Select
-    End Function
+    End Sub
 
-    Sub toggleCheckbox(checkboxID, wnd)
+    Sub ToggleCheckbox(checkboxID, wnd)
         If GetUserArea(wnd).FindById("chk" & checkboxID) Then
             GetUserArea(wnd).FindById("chk" & checkboxID).Selected = False
         Else
@@ -120,8 +123,8 @@ Class ClassSapSession
         End If
     End Sub
 
-    Sub execute()
-        GetToolbar(0, 1).press
+    Sub Execute(ByVal tbar)
+        PressToolbarBtn "btn[8]", 0, tbar 
     End Sub
 
     Sub Handle(ByRef session)

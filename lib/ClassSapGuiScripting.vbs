@@ -103,6 +103,12 @@ Class ClassSapGuiScripting
             Set sess = new ClassSapSession
             sess.Handle objConnection.Sessions(0)
             sess.Login SAP_USER, SAP_PASS
+        End If
+
+        AttachAvailableSessions
+
+        if DECIMAL_SEPARATOR = "" or THOUSANDS_SEPARATOR = "" Then
+            Set sess = GetAvailableSession
             WScript.Echo "Getting session data..."
             sess.StartTransaction "ZSU3"
             sess.SelectElement "tabsTABSTRIP1/tabpDEFA", 0
@@ -110,7 +116,6 @@ Class ClassSapGuiScripting
             THOUSANDS_SEPARATOR = Mid(sess.GetElement("tabsTABSTRIP1/tabpDEFA/ssubMAINAREA:SAPLSUID_MAINTENANCE:1105/cmbSUID_ST_NODE_DEFAULTS-DATFM",0).text, 6, 1)
             sess.GoToMenu
         End If
-        AttachAvailableSessions
     End Sub
     
     Private Function IsUserLoggedIn()
@@ -173,6 +178,14 @@ Class ClassSapGuiScripting
         lstSessions.add s
     End Sub
 
+    Public Sub CloseSession(session)
+        
+        For i = 0 to lstSessions.count-1
+            if GetSession(i).Id = session.Id Then lstSessions.RemoveAt(i)
+        Next
+        objConnection.CloseSession(session.Id)
+    End Sub
+
     Public Function GetAvailableSession()
         Set GetAvailableSession = lstSessions(0)
     End Function
@@ -229,6 +242,7 @@ Class ClassSapGuiScripting
 
     Function NumberFormat(ByVal exp)
         exp = FormatNumber(CDbl(exp),-1,-2,-2,0)
+
         If InStr(1, exp, "-") Then
             exp = Replace(exp, "-", "")
             neg = "-"
@@ -238,7 +252,6 @@ Class ClassSapGuiScripting
 
         sysDecSeparator = Mid(FormatNumber(0.1,1,true,false,-2), 2, 1)
         exp = Replace(exp, sysDecSeparator, DECIMAL_SEPARATOR)
-
         NumberFormat = exp
     End Function
 
@@ -248,10 +261,14 @@ Class ClassSapGuiScripting
         exp = Replace(exp, THOUSANDS_SEPARATOR, "") & decpart
     End Sub
     
-    Public Function NormalizeDate(ByVal date)
-        NormalizeDate = Right("0" & Day(date),2) & Right("0" & Month(date),2) & year(date)
+    Public Function NormDate(ByVal date)
+        NormDate = Right("0" & Day(date),2) & Right("0" & Month(date),2) & year(date)
     End Function
     
+    Public Function NormDocNumber(ByVal number)
+        NormDocNumber = Right("0" & number, 10)
+    End Function
+
     Sub Engine_CreateSession(ByRef Session)
         WScript.Echo "Session created"
         SapGuiScripting.AttachSession session
