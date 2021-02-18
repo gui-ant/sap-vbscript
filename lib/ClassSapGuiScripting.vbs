@@ -179,11 +179,16 @@ Class ClassSapGuiScripting
     End Sub
 
     Public Sub CloseSession(session)
-        
-        For i = 0 to lstSessions.count-1
-            if GetSession(i).Id = session.Id Then lstSessions.RemoveAt(i)
-        Next
-        objConnection.CloseSession(session.Id)
+ 
+		if lstSessions.Count = 1 Then 
+			GetSession(0).GoToMenu
+		Else
+			For i = 0 to lstSessions.count-1
+				if GetSession(i).Id = session.Id Then lstSessions.RemoveAt(i)
+			Next
+			
+			objConnection.CloseSession(session.Id)
+		End If
     End Sub
 
     Public Function GetAvailableSession()
