@@ -80,7 +80,7 @@ Class ClassSapGuiScripting
         
         Dim WSHShell : Set WSHShell = CreateObject("WScript.Shell")
         WSHShell.Run path, 1, false
-        WScript.echo "Initiating a new SAPGUI instance..."
+        'WScript.echo "Initiating a new SAPGUI instance..."
         
         attempts = 0
         Do Until WSHShell.AppActivate("SAP Logon ")
@@ -93,13 +93,18 @@ Class ClassSapGuiScripting
             End If
         Loop
         Set WSHShell = Nothing
-        WScript.echo "An new SAP GUI instance was initiated."
+        'WScript.echo "An new SAP GUI instance was initiated."
         StartApplication = True
     End Function
 
     Sub Attach()
         Set objConnection = StartOrGetConnection
-        If Not IsUserLoggedIn then
+        
+        If ActiveUser = "" Then
+            If SAP_USER = "" and SAP_PASS = "" Then 
+                WScript.Echo "Parameterizações de sessão inexistentes."
+                Exit Sub
+            End If
             Set sess = new ClassSapSession
             sess.Handle objConnection.Sessions(0)
             sess.Login SAP_USER, SAP_PASS
@@ -109,7 +114,7 @@ Class ClassSapGuiScripting
 
         if DECIMAL_SEPARATOR = "" or THOUSANDS_SEPARATOR = "" Then
             Set sess = GetAvailableSession
-            WScript.Echo "Getting session data..."
+            'WScript.Echo "Getting session data..."
             sess.StartTransaction "ZSU3"
             sess.SelectElement "tabsTABSTRIP1/tabpDEFA", 0
             DECIMAL_SEPARATOR   = Mid(sess.GetElement("tabsTABSTRIP1/tabpDEFA/ssubMAINAREA:SAPLSUID_MAINTENANCE:1105/cmbSUID_ST_NODE_DEFAULTS-DCPFM",0).text, 10, 1)
@@ -117,9 +122,18 @@ Class ClassSapGuiScripting
             sess.GoToMenu
         End If
     End Sub
-    
-    Private Function IsUserLoggedIn()
-        If objConnection.Sessions(0).Info.User = SAP_USER then IsUserLoggedIn = true
+
+    Private Function ActiveUser()
+        ActiveUser = ""
+        on error resume next
+        ActiveUser = objConnection.Sessions(0).Info.User
+        err.clear
+    End Function
+
+    Private Function IsUserLoggedIn(ByVal user)
+        If ActiveUser <> "" Then
+            If UCase(ActiveUser) = UCase(user) then IsUserLoggedIn = true
+        End If
     End Function
     
     Private Sub AppWait()
@@ -275,7 +289,7 @@ Class ClassSapGuiScripting
     End Function
 
     Sub Engine_CreateSession(ByRef Session)
-        WScript.Echo "Session created"
+        'WScript.Echo "Session created"
         SapGuiScripting.AttachSession session
         SapGuiScripting.Waiting = 0
     End Sub

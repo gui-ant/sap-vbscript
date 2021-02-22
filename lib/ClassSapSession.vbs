@@ -8,7 +8,7 @@ Class ClassSapSession
     End Sub
 
     Public Sub Login(user, pass)
-        WScript.Echo "Logging in " & user & "..."
+        'WScript.Echo "Logging in " & user & "..."
         GetElement("txtRSYST-BNAME",0).Text = user
         GetElement("pwdRSYST-BCODE",0).Text = pass
         GetWindow(0).SendVKey 0
